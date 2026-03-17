@@ -250,6 +250,59 @@ td.num-cell  { text-align: right; font-variant-numeric: tabular-nums; white-spac
 /* ─── INSIGHTS GROUP ─── */
 .insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap: 13px; }
 .insight-card { border-left: 3px solid var(--border); }
+
+/* ─── 移动端适配 ─── */
+@media (max-width: 768px) {
+  .topnav { padding: 0 12px; height: 48px; }
+  .nav-brand { font-size: 14px; margin-right: 12px; }
+  .nav-links { gap: 0; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+  .nav-link { padding: 8px 12px; font-size: 13px; min-height: 44px; display: inline-flex; align-items: center; -webkit-tap-highlight-color: transparent; }
+  .page { padding: 0 16px 40px; }
+  .hero { padding: 24px 0 20px; margin-bottom: 20px; }
+  .hero h1 { font-size: 22px; line-height: 1.35; }
+  .hero p { font-size: 12.5px; }
+  .lgrow { margin-top: 12px; gap: 10px; }
+  .gbar { width: 120px; }
+  .section { margin-bottom: 28px; scroll-margin-top: 52px; }
+  .section-hd { flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .section-title { font-size: 15px; white-space: normal; }
+  .section-sub { font-size: 11px; flex-basis: 100%; }
+  .section-line { flex-basis: 100%; order: -1; margin-bottom: 4px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
+  .stat-card { padding: 14px 12px; }
+  .sc-val { font-size: 20px; }
+  .panel { padding: 14px; }
+  .chart-2col { gap: 12px; }
+  .tier-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .tier-card { padding: 10px; }
+  .tier-score { font-size: 15px; }
+  .notice-box { padding: 14px 16px; margin-bottom: 20px; }
+  .notice-body { font-size: 12px; }
+  .bu-grid { grid-template-columns: 1fr; gap: 12px; }
+  .bu-card { padding: 16px 14px 12px; min-height: 44px; -webkit-tap-highlight-color: transparent; }
+  .bu-stat { padding: 6px 4px; }
+  .bu-sv { font-size: 14px; }
+  .tbl-controls { flex-direction: column; align-items: stretch; gap: 8px; }
+  .tbl-search { width: 100%; max-width: 100%; }
+  .tbl-outer { margin: 0 -16px; border-radius: 0; border-left: none; border-right: none; }
+  table { font-size: 12px; }
+  th, td { padding: 8px 6px; }
+  .col-name { width: 70px; }
+  .col-cnt { width: 56px; }
+  .col-score { width: 72px; }
+  .col-us { width: 140px; }
+  .col-ai { min-width: 160px; }
+  .insights-grid { grid-template-columns: 1fr; gap: 10px; }
+  .insight-card { padding: 14px; }
+  .insight-title { font-size: 13px; }
+  .insight-body { font-size: 12px; }
+  #tooltip { max-width: min(360px, calc(100vw - 24px)); min-width: 260px; }
+}
+@media (max-width: 480px) {
+  .hero h1 { font-size: 19px; }
+  .stat-grid { grid-template-columns: 1fr; }
+  .tier-grid { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>

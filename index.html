@@ -3,23 +3,220 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>贝壳 AI Exposure 分析报告</title>
-  <meta http-equiv="refresh" content="0; url=beike_analysis_v2.html">
+  <title>贝壳岗位 AI Exposure 对标分析</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #21262d;
+      --t1: #f0f6fc;
+      --t2: #c9d1d9;
+      --t3: #8b949e;
+      --t4: #6e7681;
+      --blue: #58a6ff;
+      --green: #3fb950;
+      --r: 10px;
+    }
+    html { min-height: 100%; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: #0d1117; color: #f0f6fc; min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
+      background: var(--bg);
+      color: var(--t1);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px 60px;
     }
-    a { color: #58a6ff; text-decoration: none; font-weight: 600; }
-    a:hover { text-decoration: underline; }
-    .title { font-size: 20px; margin-bottom: 12px; }
-    .hint { font-size: 13px; color: #8b949e; margin-top: 8px; }
+
+    .cover-header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .cover-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: var(--t1);
+      margin-bottom: 10px;
+    }
+    .cover-subtitle {
+      font-size: 14px;
+      color: var(--t3);
+      font-weight: 400;
+    }
+
+    .cover-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      max-width: 720px;
+      width: 100%;
+      padding: 32px 28px 28px;
+    }
+
+    .cover-section {
+      margin-bottom: 24px;
+    }
+    .cover-section:last-of-type { margin-bottom: 0; }
+
+    .cover-section-hd {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .cover-section-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      color: var(--blue);
+    }
+    .cover-section-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--t1);
+    }
+    .cover-section-body {
+      font-size: 13px;
+      color: var(--t2);
+      line-height: 1.75;
+      padding-left: 30px;
+    }
+    .cover-section-body ul {
+      list-style: none;
+      padding: 0;
+    }
+    .cover-section-body li {
+      position: relative;
+      padding-left: 14px;
+      margin-bottom: 6px;
+    }
+    .cover-section-body li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 8px;
+      width: 4px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--t3);
+    }
+    .cover-section-body li:last-child { margin-bottom: 0; }
+
+    .cover-cta-wrap {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .cover-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: var(--green);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      transition: filter .15s, transform .05s;
+    }
+    .cover-cta:hover {
+      filter: brightness(1.1);
+    }
+    .cover-cta:active {
+      transform: scale(0.98);
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 24px 16px 40px; }
+      .cover-header { margin-bottom: 28px; }
+      .cover-title { font-size: 22px; line-height: 1.3; }
+      .cover-subtitle { font-size: 13px; }
+      .cover-card { padding: 24px 20px 24px; }
+      .cover-section { margin-bottom: 20px; }
+      .cover-section-body { padding-left: 0; font-size: 12.5px; }
+      .cover-section-body li { padding-left: 14px; }
+      .cover-cta-wrap { margin-top: 24px; padding-top: 20px; }
+      .cover-cta { padding: 14px 24px; font-size: 15px; min-height: 48px; -webkit-tap-highlight-color: transparent; }
+    }
+    @media (max-width: 380px) {
+      .cover-title { font-size: 19px; }
+      .cover-card { padding: 20px 16px 20px; }
+    }
   </style>
 </head>
 <body>
-  <p class="title">正在跳转到报告…</p>
-  <p class="hint">若未自动跳转，请 <a href="beike_analysis_v2.html">点击这里进入贝壳集团岗位族 AI Exposure 分析报告</a></p>
+  <header class="cover-header">
+    <h1 class="cover-title">贝壳岗位 AI Exposure 对标分析</h1>
+    <p class="cover-subtitle">基于美国职业体系的岗位映射与AI影响评估</p>
+  </header>
+
+  <main class="cover-card">
+    <section class="cover-section">
+      <div class="cover-section-hd">
+        <span class="cover-section-icon">📄</span>
+        <h2 class="cover-section-title">报告目的</h2>
+      </div>
+      <div class="cover-section-body">
+        参考 Karpathy 职业 AI Exposure 项目逻辑，将贝壳岗位与美国职业体系进行映射，对不同岗位和事业线的 AI 影响程度做相对分析。重点不是判断岗位是否消失，而是看哪些岗位会先被 AI 重塑、哪些方向更适合优先做 AI 提效和人机协同。
+      </div>
+    </section>
+
+    <section class="cover-section">
+      <div class="cover-section-hd">
+        <span class="cover-section-icon">🔍</span>
+        <h2 class="cover-section-title">分析逻辑</h2>
+      </div>
+      <div class="cover-section-body">
+        <ul>
+          <li>以美国劳工统计局职业体系作为外部参照</li>
+          <li>按岗位实际工作内容做映射，不只看岗位名称</li>
+          <li>单个贝壳岗位可对应多个 US jobs</li>
+          <li>AI Exposure 表示岗位被 AI 改变工作方式的程度，不等于替代概率</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="cover-section">
+      <div class="cover-section-hd">
+        <span class="cover-section-icon">📊</span>
+        <h2 class="cover-section-title">图表说明</h2>
+      </div>
+      <div class="cover-section-body">
+        <ul>
+          <li>方块大小：岗位人数</li>
+          <li>颜色深浅：AI Exposure 平均值</li>
+          <li>悬浮信息：岗位名称、AI Exposure 平均分、对应 US jobs 及其分值</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="cover-section">
+      <div class="cover-section-hd">
+        <span class="cover-section-icon">💡</span>
+        <h2 class="cover-section-title">使用提示</h2>
+      </div>
+      <div class="cover-section-body">
+        本报告适合用于观察岗位结构差异、识别 AI 试点优先方向、辅助讨论组织与能力升级；不建议直接作为单岗位裁撤或精确人力预算依据。
+      </div>
+    </section>
+
+    <div class="cover-cta-wrap">
+      <a class="cover-cta" href="beike_analysis_v2.html">点击进入分析报告 →</a>
+    </div>
+  </main>
 </body>
 </html>
