@@ -255,11 +255,16 @@ function showTT(ev,d) {
     });
   }
   const tw=400,th=tt.offsetHeight||240;
-  let left=ev.clientX+18,top=ev.clientY-20;
-  if(left+tw>window.innerWidth-8) left=ev.clientX-tw-18;
-  if(top+th>window.innerHeight-8) top=window.innerHeight-th-8;
-  if(top<8) top=8;
-  tt.style.left=left+'px'; tt.style.top=top+'px'; tt.classList.add('on');
+  if(window.innerWidth<=768){
+    tt.style.left='50%'; tt.style.top='50%'; tt.style.transform='translate(-50%, -50%)';
+  }else{
+    let left=ev.clientX+18,top=ev.clientY-20;
+    if(left+tw>window.innerWidth-8) left=ev.clientX-tw-18;
+    if(top+th>window.innerHeight-8) top=window.innerHeight-th-8;
+    if(top<8) top=8;
+    tt.style.left=left+'px'; tt.style.top=top+'px'; tt.style.transform='';
+  }
+  tt.classList.add('on');
 }
 function hideTT(){ tt.classList.remove('on'); }
 

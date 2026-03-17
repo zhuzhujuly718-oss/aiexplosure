@@ -660,7 +660,7 @@ const RAW = [
   {name:"投资",count:40,avg:8.0,ai_impact:"高暴露。AI可加速行业扫描、财务梳理、纪要整理和初步判断；投决、关系推进和风险承担仍在人。",us:[{n:"Financial analysts",s:9},{n:"Financial managers",s:7}]},
   {name:"CA/BD",count:6912,avg:7.0,ai_impact:"中高暴露。AI可做商机挖掘、话术准备、方案草稿和合作资料整理；BD关系经营和谈判仍是人的壁垒。",us:[{n:"Sales managers",s:7},{n:"Wholesale and manufacturing sales representatives",s:7},{n:"Sales engineers",s:7}]},
   {name:"法务",count:336,avg:8.0,ai_impact:"高暴露。AI可处理合同比对、条款提取、案例检索和合规初审；复杂争议、谈判与责任判断仍需律师/法务。",us:[{n:"Lawyers",s:8},{n:"Paralegals and legal assistants",s:9},{n:"Arbitrators, mediators & conciliators",s:7}]},
-  {name:"经纪人",count:106800,avg:6.3,ai_impact:"中高暴露。AI会重塑房源匹配、客户分层、文案、跟进提醒与合同准备；成交、信任与谈判仍是核心人力。",us:[{n:"Real estate brokers and sales agents",s:6},{n:"Property, real estate & community assoc. managers",s:6},{n:"Property appraisers and assessors",s:7}]},
+  {name:"经纪人（含资管经理、设计师/客经等）",count:106800,avg:6.3,ai_impact:"中高暴露。AI会重塑房源匹配、客户分层、文案、跟进提醒与合同准备；成交、信任与谈判仍是核心人力。",us:[{n:"Real estate brokers and sales agents",s:6},{n:"Property, real estate & community assoc. managers",s:6},{n:"Property appraisers and assessors",s:7}]},
   {name:"测试",count:108,avg:9.0,ai_impact:"高暴露。AI可自动生成测试用例、脚本、回归检查和缺陷归类；质量门禁设计与复杂问题定位仍需人。",us:[{n:"Software developers, QA analysts & testers",s:9}]},
   {name:"研发",count:1149,avg:9.0,ai_impact:"高暴露。AI已显著改变编码、调试、文档和代码审查；架构取舍、复杂系统设计和工程治理仍由人主导。",us:[{n:"Software developers, QA analysts & testers",s:9},{n:"Computer programmers",s:9},{n:"Computer and information research scientists",s:9}]},
   {name:"硬件",count:5,avg:8.0,ai_impact:"中等暴露。AI可做诊断建议、配置文档和巡检辅助；设备安装、排障和现场处理仍依赖人。",us:[{n:"Computer hardware engineers",s:8}]},
@@ -775,7 +775,7 @@ const nLow  = DATA.filter(d=>d.avg<=5).length;
 const nMid  = DATA.length-nHigh-nLow;
 
 document.getElementById('stat-grid').innerHTML = [
-  {v:total.toLocaleString('zh-CN'), l:'总员工人数', s:'含经纪人106,800人', c:'var(--blue)'},
+  {v:total.toLocaleString('zh-CN'), l:'总员工人数', s:'含经纪人（含资管经理、设计师/客经等）106,800人', c:'var(--blue)'},
   {v:DATA.length, l:'岗位族数量', s:'已分析', c:'var(--t1)'},
   {v:wAvg.toFixed(2), l:'加权平均 AI 评分', s:'员工人数加权', c:'var(--orange)'},
   {v:nHigh, l:'高暴露岗位（≥8）', s:`占比 ${(nHigh/DATA.length*100).toFixed(0)}%`, c:'var(--red)'},
@@ -917,12 +917,12 @@ window.addEventListener('load', function(){ setTimeout(renderTreemap, 80); });
         {
           icon: '📊',
           t: '加权均分 6.35：整体中等偏上',
-          b: `受经纪人岗位大权重影响，加权均分约 <strong>6.35/10</strong>。若排除经纪人，其余岗位加权均分超 <strong>7.2</strong>，显示非经纪人岗位 AI 影响已相当显著。`
+          b: `受经纪人（含资管经理、设计师/客经等）岗位大权重影响，加权均分约 <strong>6.35/10</strong>。若排除经纪人（含资管经理、设计师/客经等），其余岗位加权均分超 <strong>7.2</strong>，显示非经纪人（含资管经理、设计师/客经等）岗位 AI 影响已相当显著。`
         },
         {
           icon: '🏠',
-          t: '"经纪人"是最大的人数方阵',
-          b: `<strong>经纪人岗位</strong>拥有 <strong>106,800 人</strong>，占全公司约 <strong>81.7%</strong>，AI Exposure 评分 <strong>6.3/10</strong>（中等）。主要对应房产经纪人、资产评估师，AI 能辅助但难以完全取代人际信任与本地化判断。`
+          t: '"经纪人（含资管经理、设计师/客经等）"是最大的人数方阵',
+          b: `<strong>经纪人（含资管经理、设计师/客经等）岗位</strong>拥有 <strong>106,800 人</strong>，占全公司约 <strong>81.7%</strong>，AI Exposure 评分 <strong>6.3/10</strong>（中等）。主要对应房产经纪人（含资管经理、设计师/客经等）、资产评估师，AI 能辅助但难以完全取代人际信任与本地化判断。`
         },
         {
           icon: '🔗',
@@ -1018,11 +1018,16 @@ function showTT(ev,d){
     ul.appendChild(li);
   });
   const tw=360, th_=tt.offsetHeight||210;
-  let left=ev.clientX+16, top=ev.clientY-14;
-  if(left+tw>window.innerWidth-8) left=ev.clientX-tw-16;
-  if(top+th_>window.innerHeight-8) top=window.innerHeight-th_-8;
-  if(top<8) top=8;
-  tt.style.left=left+'px'; tt.style.top=top+'px'; tt.classList.add('on');
+  if(window.innerWidth<=768){
+    tt.style.left='50%'; tt.style.top='50%'; tt.style.transform='translate(-50%, -50%)';
+  }else{
+    let left=ev.clientX+16, top=ev.clientY-14;
+    if(left+tw>window.innerWidth-8) left=ev.clientX-tw-16;
+    if(top+th_>window.innerHeight-8) top=window.innerHeight-th_-8;
+    if(top<8) top=8;
+    tt.style.left=left+'px'; tt.style.top=top+'px'; tt.style.transform='';
+  }
+  tt.classList.add('on');
 }
 function hideTT(){ tt.classList.remove('on'); }
 
