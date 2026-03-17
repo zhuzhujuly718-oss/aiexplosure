@@ -71,6 +71,7 @@ body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','M
 .chart-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 720px) { .chart-2col { grid-template-columns: 1fr; } }
 .chart-title { font-size: 13px; font-weight: 600; color: var(--t2); margin-bottom: 14px; }
+.pie-wrap { position: relative; height: 270px; }
 
 /* ─── TIERS ─── */
 .tier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px,1fr)); gap: 10px; }
@@ -93,7 +94,7 @@ body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','M
 .tbl-search:focus { border-color: var(--blue); }
 .sort-hint { font-size: 12px; color: var(--t4); }
 .tbl-count { font-size: 12px; color: var(--t4); margin-left: auto; }
-.tbl-outer { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--border); }
+.tbl-outer { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
 
 table { width: 100%; border-collapse: collapse; font-size: 12.5px; table-layout: fixed; }
 thead tr { background: var(--surface2); }
@@ -273,25 +274,47 @@ td.num-cell  { text-align: right; font-variant-numeric: tabular-nums; white-spac
   .sc-val { font-size: 20px; }
   .panel { padding: 14px; }
   .chart-2col { gap: 12px; }
-  .tier-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .tier-card { padding: 10px; }
-  .tier-score { font-size: 15px; }
+  /* 分级分析模块移动端优化 */
+  #sec-tiers .chart-2col { gap: 16px; }
+  #sec-tiers .panel { padding: 16px; }
+  #sec-tiers .chart-title { font-size: 12.5px; margin-bottom: 12px; }
+  .tier-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .tier-card { padding: 12px 10px; min-width: 0; }
+  .tier-score { font-size: 16px; margin-bottom: 4px; }
+  .tier-label { font-size: 11px; margin-bottom: 4px; }
+  .tier-count { font-size: 12.5px; }
+  .tier-pct { font-size: 10.5px; }
+  .tier-jobs { font-size: 10px; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; margin-top: 6px; }
+  .pie-wrap { height: 240px; }
+  #sec-tiers .panel-pie .pie-wrap { margin-bottom: 8px; }
   .notice-box { padding: 14px 16px; margin-bottom: 20px; }
   .notice-body { font-size: 12px; }
   .bu-grid { grid-template-columns: 1fr; gap: 12px; }
   .bu-card { padding: 16px 14px 12px; min-height: 44px; -webkit-tap-highlight-color: transparent; }
   .bu-stat { padding: 6px 4px; }
   .bu-sv { font-size: 14px; }
-  .tbl-controls { flex-direction: column; align-items: stretch; gap: 8px; }
-  .tbl-search { width: 100%; max-width: 100%; }
+  /* 表格移动端优化 */
+  #sec-table .section-hd { margin-bottom: 12px; }
+  .tbl-controls { flex-direction: column; align-items: stretch; gap: 8px; margin-bottom: 10px; }
+  .tbl-search { width: 100%; max-width: 100%; padding: 8px 12px; font-size: 14px; min-height: 44px; }
+  .sort-hint { font-size: 11px; }
   .tbl-outer { margin: 0 -16px; border-radius: 0; border-left: none; border-right: none; }
-  table { font-size: 12px; }
-  th, td { padding: 8px 6px; }
-  .col-name { width: 70px; }
-  .col-cnt { width: 56px; }
-  .col-score { width: 72px; }
-  .col-us { width: 140px; }
-  .col-ai { min-width: 160px; }
+  #data-table { font-size: 12px; min-width: 520px; }
+  #data-table th, #data-table td { padding: 10px 8px; }
+  #data-table th { font-size: 10px; padding: 8px 6px; }
+  .col-name { width: 76px; }
+  .col-cnt { width: 52px; }
+  .col-score { width: 68px; }
+  .col-us { width: 150px; }
+  .col-ai { width: 174px; min-width: 174px; }
+  #data-table .name-cell { font-size: 12px; }
+  #data-table .us-job-name { font-size: 10.5px; }
+  #data-table .ai-impact-text { font-size: 11px; }
+  /* 首列固定，横向滚动时仍可见 */
+  #data-table thead th:first-child,
+  #data-table tbody td:first-child { position: sticky; left: 0; z-index: 2; background: var(--surface2); box-shadow: 4px 0 8px -2px rgba(0,0,0,.25); }
+  #data-table tbody td:first-child { background: var(--surface); }
+  #data-table tbody tr:hover td:first-child { background: rgba(255,255,255,.035); }
   .insights-grid { grid-template-columns: 1fr; gap: 10px; }
   .insight-card { padding: 14px; }
   .insight-title { font-size: 13px; }
@@ -301,7 +324,36 @@ td.num-cell  { text-align: right; font-variant-numeric: tabular-nums; white-spac
 @media (max-width: 480px) {
   .hero h1 { font-size: 19px; }
   .stat-grid { grid-template-columns: 1fr; }
-  .tier-grid { grid-template-columns: 1fr; }
+  #sec-tiers .panel { padding: 14px; }
+  .tier-grid { grid-template-columns: 1fr; gap: 10px; }
+  .tier-card { padding: 14px 12px; }
+  .tier-score { font-size: 17px; }
+  .tier-jobs { -webkit-line-clamp: 3; line-clamp: 3; }
+  .pie-wrap { height: 220px; }
+}
+@media (max-width: 480px) {
+  #data-table { font-size: 11.5px; min-width: 460px; }
+  #data-table th, #data-table td { padding: 8px 6px; }
+  #data-table th { font-size: 9.5px; }
+  .col-name { width: 68px; }
+  .col-cnt { width: 46px; }
+  .col-score { width: 60px; }
+  .col-us { width: 130px; }
+  .col-ai { width: 156px; min-width: 156px; }
+  #data-table .name-cell { font-size: 11.5px; }
+  #data-table .score-pill { font-size: 11px; padding: 2px 6px; }
+}
+@media (max-width: 360px) {
+  #sec-tiers .chart-title { font-size: 12px; }
+  .tier-card { padding: 12px 10px; }
+  .tier-score { font-size: 15px; }
+  .pie-wrap { height: 200px; }
+  #data-table { min-width: 420px; }
+  .col-name { width: 62px; }
+  .col-cnt { width: 42px; }
+  .col-score { width: 56px; }
+  .col-us { width: 118px; }
+  .col-ai { width: 142px; min-width: 142px; }
 }
 </style>
 </head>
@@ -507,9 +559,9 @@ td.num-cell  { text-align: right; font-variant-numeric: tabular-nums; white-spac
       <div class="chart-title">各评分段岗位族数量与人数</div>
       <div class="tier-grid" id="tier-grid"></div>
     </div>
-    <div class="panel">
+    <div class="panel panel-pie">
       <div class="chart-title">评分段人数占比（员工视角）</div>
-      <div style="position:relative;height:270px">
+      <div class="pie-wrap">
         <canvas id="pie-chart"></canvas>
       </div>
     </div>
@@ -757,16 +809,21 @@ TIERS.forEach(t=>{
     </div>`;
   pieL.push(t.l); pieD.push(ppl); pieC.push(t.c);
 });
-new Chart(document.getElementById('pie-chart'),{
+function getPieLegendPosition(){ return window.innerWidth <= 768 ? 'bottom' : 'right'; }
+const pieChart = new Chart(document.getElementById('pie-chart'),{
   type:'doughnut',
   data:{labels:pieL, datasets:[{data:pieD,backgroundColor:pieC,borderColor:'#0d1117',borderWidth:3}]},
   options:{
     responsive:true,maintainAspectRatio:false,
     plugins:{
-      legend:{position:'right',labels:{color:'#c9d1d9',font:{size:11},padding:10}},
+      legend:{position:getPieLegendPosition(),labels:{color:'#c9d1d9',font:{size:11},padding:10}},
       tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw.toLocaleString('zh-CN')} 人 (${(ctx.raw/total*100).toFixed(1)}%)`}}
     }
   }
+});
+window.addEventListener('resize',function(){
+  var pos = getPieLegendPosition();
+  if(pieChart.options.plugins.legend.position !== pos){ pieChart.options.plugins.legend.position = pos; pieChart.update(); }
 });
 
 // ═══════════════════════════════════
