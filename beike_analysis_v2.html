@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>贝壳集团岗位族 AI Exposure 分析报告</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ─── RESET & BASE ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d1117; --surface: #161b22; --surface2: #1c2128;
+  --border: #21262d; --border2: #30363d;
+  --t1: #f0f6fc; --t2: #c9d1d9; --t3: #8b949e; --t4: #6e7681;
+  --blue: #58a6ff; --green: #3fb950; --red: #f85149; --orange: #e3b341; --purple: #d2a8ff;
+  --r: 10px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+       background: var(--bg); color: var(--t1); font-size: 14px; line-height: 1.6; }
+
+/* ─── NAV ─── */
+.topnav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(13,17,23,.94); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 24px; height: 50px; gap: 0;
+}
+.nav-brand { font-size: 15px; font-weight: 700; margin-right: 20px; white-space: nowrap; flex-shrink: 0; }
+.nav-links { display: flex; gap: 2px; overflow-x: auto; }
+.nav-link {
+  padding: 5px 13px; border-radius: 6px; font-size: 13px; color: var(--t3);
+  cursor: pointer; white-space: nowrap; border: none; background: none;
+  transition: background .15s, color .15s;
+}
+.nav-link:hover { background: rgba(255,255,255,.06); color: var(--t1); }
+.nav-link.active { background: rgba(88,166,255,.14); color: var(--blue); }
+
+.page { max-width: 1280px; margin: 0 auto; padding: 0 24px 60px; }
+
+/* ─── HERO ─── */
+.hero { padding: 36px 0 28px; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+.hero-label { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--t4); margin-bottom: 6px; }
+.hero h1 { font-size: 26px; font-weight: 800; letter-spacing: -.4px; margin-bottom: 8px; }
+.hero h1 span { color: var(--blue); }
+.hero p { font-size: 13px; color: var(--t3); max-width: 680px; line-height: 1.75; }
+.lgrow { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.gbar { width: 160px; height: 10px; border-radius: 5px; background: linear-gradient(to right,#1a6b3c,#2da44e,#3fb950,#bfb800,#d29922,#f0883e,#da3633,#8b0000); }
+.glbl { font-size: 11px; color: var(--t4); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--t3); }
+.cdot { width: 9px; height: 9px; border-radius: 2px; }
+
+/* ─── SECTION ─── */
+.section { margin-bottom: 40px; scroll-margin-top: 58px; }
+.section-hd { display: flex; align-items: baseline; gap: 12px; margin-bottom: 18px; }
+.section-title { font-size: 17px; font-weight: 700; white-space: nowrap; }
+.section-sub { font-size: 12px; color: var(--t4); }
+.section-line { flex: 1; height: 1px; background: var(--border); }
+
+/* ─── STAT CARDS ─── */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px; margin-bottom: 32px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 16px 15px; }
+.sc-val { font-size: 24px; font-weight: 800; line-height: 1.1; }
+.sc-label { font-size: 11px; color: var(--t3); text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+.sc-sub { font-size: 11px; color: var(--t4); margin-top: 2px; }
+
+/* ─── PANELS ─── */
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; }
+.chart-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .chart-2col { grid-template-columns: 1fr; } }
+.chart-title { font-size: 13px; font-weight: 600; color: var(--t2); margin-bottom: 14px; }
+
+/* ─── TIERS ─── */
+.tier-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px,1fr)); gap: 10px; }
+.tier-card {
+  background: var(--surface2); border: 1px solid var(--border); border-left-width: 3px;
+  border-radius: 8px; padding: 12px 11px;
+}
+.tier-score { font-size: 17px; font-weight: 800; margin-bottom: 2px; }
+.tier-label { font-size: 11px; color: var(--t3); margin-bottom: 6px; }
+.tier-count { font-size: 13px; font-weight: 600; }
+.tier-pct { font-size: 11px; color: var(--t4); }
+.tier-jobs { font-size: 10.5px; color: var(--t3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ─── TABLE ─── */
+.tbl-controls { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+.tbl-search {
+  padding: 7px 12px; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 7px; color: var(--t1); font-size: 13px; outline: none; width: 220px;
+}
+.tbl-search:focus { border-color: var(--blue); }
+.sort-hint { font-size: 12px; color: var(--t4); }
+.tbl-count { font-size: 12px; color: var(--t4); margin-left: auto; }
+.tbl-outer { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--border); }
+
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; table-layout: fixed; }
+thead tr { background: var(--surface2); }
+th {
+  padding: 10px 10px; text-align: left; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--t3);
+  border-bottom: 1px solid var(--border2); cursor: pointer; user-select: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+th:hover { color: var(--t1); }
+th.sorted { color: var(--blue); }
+th .si { margin-left: 3px; opacity: .45; font-size: 10px; }
+th.sorted .si { opacity: 1; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,.023); }
+td { padding: 9px 10px; vertical-align: top; word-break: break-word; }
+
+/* Column widths */
+.col-name  { width: 82px; }
+.col-cnt   { width: 72px; }
+.col-score { width: 88px; }
+.col-us    { width: 200px; }
+.col-ai    { width: auto; min-width: 200px; }
+
+td.name-cell { font-weight: 600; color: var(--t1); }
+td.num-cell  { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--t2); }
+.score-pill { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+
+/* US jobs cell */
+.us-job-line { display: flex; justify-content: space-between; align-items: flex-start; gap: 6px; padding: 2px 0; }
+.us-job-name { font-size: 11px; color: var(--t3); flex: 1; line-height: 1.45; }
+.us-job-score { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 8px; flex-shrink: 0; margin-top: 2px; white-space: nowrap; }
+.expand-btn { font-size: 11px; color: var(--blue); cursor: pointer; border: none; background: none; padding: 1px 0; margin-top: 1px; display: block; }
+.expand-btn:hover { text-decoration: underline; }
+
+/* AI impact cell */
+.ai-impact-text { font-size: 12px; color: var(--t2); line-height: 1.7; }
+.ai-impact-empty { font-size: 12px; color: var(--t4); font-style: italic; }
+
+/* ─── INSIGHTS ─── */
+.insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap: 13px; }
+.insight-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 17px 15px; }
+.insight-icon { font-size: 20px; margin-bottom: 8px; }
+.insight-title { font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+.insight-body { font-size: 12.5px; color: var(--t3); line-height: 1.75; }
+.insight-body strong { color: var(--t2); }
+
+/* ─── TOOLTIP ─── */
+#tooltip {
+  position: fixed; background: #1c2128; border: 1px solid #30363d;
+  border-radius: 10px; pointer-events: none; opacity: 0; transition: opacity .15s;
+  z-index: 9999; max-width: 360px; min-width: 240px;
+  box-shadow: 0 16px 36px rgba(0,0,0,.7); overflow: hidden;
+}
+#tooltip.on { opacity: 1; }
+.tt-h { padding: 11px 13px 9px; border-bottom: 1px solid #30363d; }
+.tt-name { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+.tt-tags { display: flex; gap: 7px; align-items: center; }
+.tt-badge { padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.tt-cnt { font-size: 11px; color: var(--t3); padding: 2px 7px; border: 1px solid #30363d; border-radius: 20px; }
+.tt-body { padding: 9px 13px 11px; }
+.tt-sec { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--t4); font-weight: 600; margin-bottom: 5px; }
+.tt-ul { list-style: none; }
+.tt-li { display: flex; justify-content: space-between; align-items: flex-start; padding: 3px 0; border-bottom: 1px solid #21262d; gap: 7px; }
+.tt-li:last-child { border-bottom: none; }
+.tt-jn { font-size: 11px; color: var(--t2); flex: 1; line-height: 1.45; }
+.tt-js { font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; flex-shrink: 0; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+/* ─── BU CARDS ─── */
+.bu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 14px;
+}
+.bu-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 16px 14px;
+  cursor: pointer;
+  transition: border-color .18s, transform .15s, box-shadow .18s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.bu-card:hover {
+  border-color: var(--blue);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(88,166,255,.15);
+}
+.bu-card-top {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.bu-icon { font-size: 22px; line-height: 1; flex-shrink: 0; }
+.bu-name { font-size: 15px; font-weight: 700; color: var(--t1); }
+.bu-desc { font-size: 12px; color: var(--t3); }
+.bu-stats {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+.bu-stat {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  border-right: 1px solid var(--border);
+}
+.bu-stat:last-child { border-right: none; }
+.bu-sv { font-size: 16px; font-weight: 700; color: var(--blue); line-height: 1.1; }
+.bu-sl { font-size: 10px; color: var(--t4); text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+.bu-footer {
+  font-size: 11px;
+  color: var(--blue);
+  text-align: right;
+  margin-top: 2px;
+  opacity: .7;
+}
+.bu-card:hover .bu-footer { opacity: 1; }
+
+
+/* ─── TREEMAP ─── */
+#treemap-svg { display: block; width: 100%; cursor: default; }
+.node rect { stroke: var(--bg); stroke-width: 2; }
+.node text { pointer-events: none; user-select: none; }
+
+/* ─── NOTICE BOX ─── */
+.notice-box {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--blue);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.notice-section { display: flex; flex-direction: column; gap: 5px; }
+.notice-title { font-size: 12px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .06em; }
+.notice-body { font-size: 12.5px; color: var(--t3); line-height: 1.78; }
+.notice-body strong { color: var(--t2); }
+.notice-divider { height: 1px; background: var(--border); }
+
+/* ─── INSIGHTS GROUP ─── */
+.insights-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap: 13px; }
+.insight-card { border-left: 3px solid var(--border); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="topnav">
+  <div class="nav-brand">🏠 贝壳 AI Exposure</div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="goto('sec-overview')">概览</button>
+    <button class="nav-link" onclick="goto('sec-treemap')">树形图</button>
+    <button class="nav-link" onclick="goto('sec-bu')">分事业线</button>
+    <button class="nav-link" onclick="goto('sec-tiers')">分级分析</button>
+    <button class="nav-link" onclick="goto('sec-table')">数据表格</button>
+    <button class="nav-link" onclick="goto('sec-insights')">关键洞察</button>
+  </div>
+</nav>
+
+<div class="page">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">数据分析报告</div>
+  <h1>贝壳集团岗位族 <span>AI Exposure</span> 全景分析</h1>
+  <p>基于 Karpathy Digital AI Exposure 评分框架，对贝壳集团 34 个岗位族进行系统分析。评分反映 AI 对各岗位的影响程度（1=极低，10=极高），并对应美国劳工统计局（BLS）标准职业分类。</p>
+  <div class="lgrow">
+    <span class="glbl">1</span>
+    <div class="gbar"></div>
+    <span class="glbl">10</span>
+    <div class="chips">
+      <div class="chip"><div class="cdot" style="background:#1a6b3c"></div>极低 1–3</div>
+      <div class="chip"><div class="cdot" style="background:#2da44e"></div>低 4–5</div>
+      <div class="chip"><div class="cdot" style="background:#d29922"></div>中 6–7</div>
+      <div class="chip"><div class="cdot" style="background:#f0883e"></div>高 8</div>
+      <div class="chip"><div class="cdot" style="background:#da3633"></div>极高 9–10</div>
+    </div>
+  </div>
+</div>
+
+
+<div class="notice-box">
+  <div class="notice-section">
+    <div class="notice-title">📌 关于 karpathy/jobs 数据源</div>
+    <p class="notice-body">该仓库由 <strong>Andrej Karpathy</strong>（前 OpenAI / Tesla AI 负责人）构建，是一个美国就业市场可视化研究工具，抓取了美国劳工统计局（BLS）职业展望手册中 <strong>342 个职业</strong>的数据，并用 LLM（Gemini Flash）为每个职业打了 <strong>"AI 暴露度评分（0–10）"</strong>，即：AI 将在多大程度上重塑该职业。本报告以此为数据基础，映射至相关行业岗位，供参考研判。</p>
+  </div>
+  <div class="notice-divider"></div>
+  <div class="notice-section">
+    <div class="notice-title">⚠️ 重要注意事项</div>
+    <p class="notice-body">这些评分是基于 LLM 的<strong>粗略估计</strong>，并非严谨的预测。<strong>高分并不意味着该工作岗位会消失</strong>。软件开发人员的得分为 9/10，因为 AI 正在改变他们的工作——但随着每位开发人员效率的提高，对软件的需求很容易增长。该评分<strong>并未考虑</strong>需求弹性、潜在需求、监管障碍或社会对人类工作者的偏好。<strong>许多高暴露度的工作岗位将会重塑，而非被取代。</strong></p>
+  </div>
+</div>
+
+<!-- OVERVIEW STATS -->
+<div id="sec-overview" class="section">
+  <div class="stat-grid" id="stat-grid"></div>
+</div>
+
+
+
+<!-- ─── TREEMAP ─── -->
+<div id="sec-treemap" class="section">
+  <div class="section-hd">
+    <span class="section-title">🗺️ 岗位族人数 × AI Exposure 树形图</span>
+    <span class="section-sub">方块面积 = 人数（对数缩放），颜色 = AI Exposure 评分；鼠标悬停查看详情</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="panel">
+    <svg id="treemap-svg"></svg>
+  </div>
+</div>
+
+<!-- BU SECTION -->
+<div id="sec-bu" class="section">
+  <div class="section-hd">
+    <span class="section-title">🏢 分事业线分析</span>
+    <span class="section-sub">点击卡片查看各事业线岗位 AI Exposure 可交互树形图</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="bu-grid">
+
+    <div class="bu-card" onclick="location.href='贝好家事业线.html'">
+      <div class="bu-card-top">
+        <span class="bu-icon">🏗️</span>
+        <span class="bu-name">贝好家事业线</span>
+      </div>
+      <div class="bu-desc">新房开发相关</div>
+      <div class="bu-stats">
+        <div class="bu-stat">
+          <div class="bu-sv">281</div>
+          <div class="bu-sl">员工人数</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv">23</div>
+          <div class="bu-sl">岗位族</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv" style="color:#f0883e">7.94</div>
+          <div class="bu-sl">加权AI均分</div>
+        </div>
+      </div>
+      <div class="bu-footer">点击查看详情 →</div>
+    </div>
+    <div class="bu-card" onclick="location.href='惠居事业线.html'">
+      <div class="bu-card-top">
+        <span class="bu-icon">🏠</span>
+        <span class="bu-name">惠居事业线</span>
+      </div>
+      <div class="bu-desc">租房与居家服务</div>
+      <div class="bu-stats">
+        <div class="bu-stat">
+          <div class="bu-sv">11,767</div>
+          <div class="bu-sl">员工人数</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv">28</div>
+          <div class="bu-sl">岗位族</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv" style="color:#d29922">6.78</div>
+          <div class="bu-sl">加权AI均分</div>
+        </div>
+      </div>
+      <div class="bu-footer">点击查看详情 →</div>
+    </div>
+    <div class="bu-card" onclick="location.href='经纪事业线.html'">
+      <div class="bu-card-top">
+        <span class="bu-icon">🤝</span>
+        <span class="bu-name">经纪事业线</span>
+      </div>
+      <div class="bu-desc">二手房经纪业务</div>
+      <div class="bu-stats">
+        <div class="bu-stat">
+          <div class="bu-sv">104,516</div>
+          <div class="bu-sl">员工人数</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv">26</div>
+          <div class="bu-sl">岗位族</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv" style="color:#d29922">6.34</div>
+          <div class="bu-sl">加权AI均分</div>
+        </div>
+      </div>
+      <div class="bu-footer">点击查看详情 →</div>
+    </div>
+    <div class="bu-card" onclick="location.href='事务线.html'">
+      <div class="bu-card-top">
+        <span class="bu-icon">⚙️</span>
+        <span class="bu-name">事务线</span>
+      </div>
+      <div class="bu-desc">集团中台与职能</div>
+      <div class="bu-stats">
+        <div class="bu-stat">
+          <div class="bu-sv">3,433</div>
+          <div class="bu-sl">员工人数</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv">28</div>
+          <div class="bu-sl">岗位族</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv" style="color:#f0883e">7.52</div>
+          <div class="bu-sl">加权AI均分</div>
+        </div>
+      </div>
+      <div class="bu-footer">点击查看详情 →</div>
+    </div>
+    <div class="bu-card" onclick="location.href='整装事业线.html'">
+      <div class="bu-card-top">
+        <span class="bu-icon">🛋️</span>
+        <span class="bu-name">整装事业线</span>
+      </div>
+      <div class="bu-desc">整体家装服务</div>
+      <div class="bu-stats">
+        <div class="bu-stat">
+          <div class="bu-sv">10,792</div>
+          <div class="bu-sl">员工人数</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv">23</div>
+          <div class="bu-sl">岗位族</div>
+        </div>
+        <div class="bu-stat">
+          <div class="bu-sv" style="color:#d29922">6.13</div>
+          <div class="bu-sl">加权AI均分</div>
+        </div>
+      </div>
+      <div class="bu-footer">点击查看详情 →</div>
+    </div>
+  </div>
+</div>
+
+<!-- TIERS -->
+<div id="sec-tiers" class="section">
+  <div class="section-hd">
+    <span class="section-title">🎯 AI Exposure 分级分析</span>
+    <span class="section-sub">各评分段岗位族数量与覆盖人数</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="chart-2col">
+    <div class="panel">
+      <div class="chart-title">各评分段岗位族数量与人数</div>
+      <div class="tier-grid" id="tier-grid"></div>
+    </div>
+    <div class="panel">
+      <div class="chart-title">评分段人数占比（员工视角）</div>
+      <div style="position:relative;height:270px">
+        <canvas id="pie-chart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div id="sec-table" class="section">
+  <div class="section-hd">
+    <span class="section-title">📋 完整数据表格</span>
+    <span class="section-sub">支持搜索、按列排序；鼠标悬停查看 Tooltip</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="tbl-controls">
+    <input class="tbl-search" id="tbl-search" placeholder="🔍 搜索岗位族名 / US 岗位…" oninput="filterTable()" />
+    <span class="sort-hint">点击表头排序</span>
+    <span class="tbl-count" id="tbl-count"></span>
+  </div>
+  <div class="tbl-outer">
+    <table id="data-table">
+      <colgroup>
+        <col class="col-name">
+        <col class="col-cnt">
+        <col class="col-score">
+        <col class="col-us">
+        <col class="col-ai">
+      </colgroup>
+      <thead>
+        <tr>
+          <th onclick="sortTable('name')" data-col="name">岗位族 <span class="si">↕</span></th>
+          <th onclick="sortTable('count')" data-col="count" style="text-align:right">人数 <span class="si">↕</span></th>
+          <th onclick="sortTable('avg')" data-col="avg" style="text-align:right">AI Exposure <span class="si">↓</span></th>
+          <th>对应 US 岗位</th>
+          <th>AI 影响要点</th>
+        </tr>
+      </thead>
+      <tbody id="tbl-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- INSIGHTS -->
+<div id="sec-insights" class="section">
+  <div class="section-hd">
+    <span class="section-title">💡 关键洞察</span>
+    <span class="section-sub">基于数据的分析发现</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="insights-grid" id="insights-grid"></div>
+</div>
+
+</div><!-- /page -->
+
+<!-- TOOLTIP -->
+<div id="tooltip">
+  <div class="tt-h">
+    <div class="tt-name" id="tt-name">—</div>
+    <div class="tt-tags">
+      <span class="tt-badge" id="tt-badge">—</span>
+      <span class="tt-cnt" id="tt-cnt">—</span>
+    </div>
+  </div>
+  <div class="tt-body">
+    <div class="tt-sec">↳ 对应 US 岗位</div>
+    <ul class="tt-ul" id="tt-ul"></ul>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// DATA  ← 业务产品研发 已按图更新
+// ═══════════════════════════════════
+const RAW = [
+  // ★ Updated per reference image
+  {name:"业务产品研发", count:283, avg:7.5,
+   ai_impact:"AI 会显著提升用户研究、需求归纳、客群洞察、方案生成和竞品分析效率，但围绕新房开发的产品定位判断、空间体验取舍、跨专业协同与最终产品定义，仍高度依赖人。",
+   us:[{n:"Industrial designers",s:7},{n:"Interior designers",s:7},{n:"Market research analysts",s:9},{n:"Survey researchers",s:7}]},
+  {name:"业务策略",count:1087,avg:8.5,ai_impact:"中高暴露。AI可加速资料搜集、目标拆解、材料草拟与初版分析；关键仍在人做经营判断、优先级取舍和向上沟通。",us:[{n:"Management analysts",s:7},{n:"Economists",s:9},{n:"Operations research analysts",s:9},{n:"Market research analysts",s:9}]},
+  {name:"产品",count:294,avg:7.5,ai_impact:"中高暴露。AI可辅助需求梳理、流程设计、PRD草稿和原型说明；人仍需负责问题定义、跨团队协调和决策。",us:[{n:"Computer systems analysts",s:8},{n:"Project management specialists",s:7}]},
+  {name:"产品运营",count:482,avg:7.3,ai_impact:"中高暴露。AI适合规则配置、内容配置、报表归因与活动复盘；例外处理、资源协同与复杂运营仍靠人。",us:[{n:"Project management specialists",s:7},{n:"Management analysts",s:7},{n:"Computer systems analysts",s:8}]},
+  {name:"产品运营策略",count:134,avg:8.3,ai_impact:"高暴露。AI可快速做用户分层、归因分析、实验思路和策略草案；最终策略选择仍需业务判断。",us:[{n:"Market research analysts",s:9},{n:"Operations research analysts",s:9},{n:"Management analysts",s:7}]},
+  {name:"产研管理",count:28,avg:7.0,ai_impact:"中高暴露。AI可接手周报、排期、风险提示和信息同步；管理者仍负责组织设计、资源调度和关键决策。",us:[{n:"Computer and information systems managers",s:7}]},
+  {name:"产研项目管理",count:13,avg:7.0,ai_impact:"中高暴露。AI适合纪要、进度跟踪、风险预警和里程碑同步；复杂协调与推动仍需人扛。",us:[{n:"Project management specialists",s:7}]},
+  {name:"人力资源",count:997,avg:7.3,ai_impact:"中高暴露。AI可用于JD撰写、简历初筛、问答、制度查询和培训材料；组织判断、面谈和敏感沟通仍在人。",us:[{n:"Human resources specialists",s:7},{n:"Human resources managers",s:7},{n:"Compensation, benefits & job analysis specialists",s:8}]},
+  {name:"供应链管理",count:281,avg:7.0,ai_impact:"中等暴露。AI可做需求预测、采购建议、库存台账和异常预警；供应商谈判与现场协同仍需人。",us:[{n:"Logisticians",s:7},{n:"Purchasing managers, buyers & agents",s:7}]},
+  {name:"公司事务",count:212,avg:7.0,ai_impact:"中高暴露。AI适合文档整理、档案归纳、会议材料和基础事务问答；对外沟通、敏感事务和统筹仍需人。",us:[{n:"Administrative services & facilities managers",s:5},{n:"Public relations specialists",s:8},{n:"Secretaries and administrative assistants",s:8}]},
+  {name:"共享服务",count:1425,avg:8.3,ai_impact:"高暴露。标准化事务、单据流转、服务台问答和台账处理最易被AI重塑；人转向复杂案例与例外审核。",us:[{n:"General office clerks",s:9},{n:"Information clerks",s:7},{n:"Financial clerks",s:9},{n:"Bookkeeping, accounting & auditing clerks",s:9},{n:"Human resources specialists",s:7},{n:"Customer service representatives",s:9}]},
+  {name:"品质管理",count:705,avg:5.0,ai_impact:"中高暴露。AI可加速质检抽样、规则识别、录音/文本检查和问题归因；最终定责与整改推进仍靠人。",us:[{n:"Quality control inspectors",s:5},{n:"Construction and building inspectors",s:5}]},
+  {name:"商业智能",count:128,avg:9.0,ai_impact:"高暴露。AI非常适合SQL辅助、看板解释、归因分析和洞察初稿；业务解释权和模型口径仍需人把关。",us:[{n:"Data scientists",s:9},{n:"Operations research analysts",s:9},{n:"Database administrators and architects",s:9}]},
+  {name:"城市综合支持",count:1012,avg:4.3,ai_impact:"中低到中等暴露。AI更像副驾驶，适合工单分发、路线安排、台账和问题升级；现场执行仍是核心。",us:[{n:"Administrative services & facilities managers",s:5},{n:"General maintenance and repair workers",s:2},{n:"Property, real estate & community assoc. managers",s:6}]},
+  {name:"客户赋能",count:457,avg:7.0,ai_impact:"中高暴露。AI可生成课程大纲、案例、题库和答疑内容；真正影响效果的仍是授课设计、互动和转化。",us:[{n:"Training and development specialists",s:7},{n:"Training and development managers",s:7},{n:"Instructional coordinators",s:7}]},
+  {name:"履约服务",count:5952,avg:4.5,ai_impact:"中低到中等暴露。AI更适合派单、巡检记录、SOP提醒和风险预警；上门交付、现场应变和客户安抚仍靠人。",us:[{n:"General maintenance and repair workers",s:2},{n:"Construction and building inspectors",s:5},{n:"Construction managers",s:5},{n:"Property, real estate & community assoc. managers",s:6}]},
+  {name:"市场",count:284,avg:8.0,ai_impact:"高暴露。AI可做文案、脚本、素材草案、活动方案和投放分析；品牌判断与大创意仍需人主导。",us:[{n:"Advertising, promotions & marketing managers",s:8},{n:"Public relations specialists",s:8},{n:"Editors",s:9},{n:"Technical writers",s:9},{n:"Meeting, convention & event planners",s:6}]},
+  {name:"店面工程",count:167,avg:5.4,ai_impact:"中等暴露。AI可辅助图纸整理、预算、进度与验收清单；工程落地和现场协同仍依赖人。",us:[{n:"Architects",s:7},{n:"Civil engineers",s:6},{n:"Construction managers",s:5},{n:"Construction laborers and helpers",s:1},{n:"Cost estimators",s:8}]},
+  {name:"技术运维",count:31,avg:8.0,ai_impact:"高暴露。AI可做告警归因、脚本生成、知识库问答和故障处理建议；稳定性兜底和高风险操作仍需人。",us:[{n:"Computer support specialists",s:8},{n:"Network and computer systems administrators",s:8},{n:"Information security analysts",s:8},{n:"Computer network architects",s:8}]},
+  {name:"投资",count:40,avg:8.0,ai_impact:"高暴露。AI可加速行业扫描、财务梳理、纪要整理和初步判断；投决、关系推进和风险承担仍在人。",us:[{n:"Financial analysts",s:9},{n:"Financial managers",s:7}]},
+  {name:"拓展联动",count:6912,avg:7.0,ai_impact:"中高暴露。AI可做商机挖掘、话术准备、方案草稿和合作资料整理；BD关系经营和谈判仍是人的壁垒。",us:[{n:"Sales managers",s:7},{n:"Wholesale and manufacturing sales representatives",s:7},{n:"Sales engineers",s:7}]},
+  {name:"法务",count:336,avg:8.0,ai_impact:"高暴露。AI可处理合同比对、条款提取、案例检索和合规初审；复杂争议、谈判与责任判断仍需律师/法务。",us:[{n:"Lawyers",s:8},{n:"Paralegals and legal assistants",s:9},{n:"Arbitrators, mediators & conciliators",s:7}]},
+  {name:"流通",count:106800,avg:6.3,ai_impact:"中高暴露。AI会重塑房源匹配、客户分层、文案、跟进提醒与合同准备；成交、信任与谈判仍是核心人力。",us:[{n:"Real estate brokers and sales agents",s:6},{n:"Property, real estate & community assoc. managers",s:6},{n:"Property appraisers and assessors",s:7}]},
+  {name:"测试",count:108,avg:9.0,ai_impact:"高暴露。AI可自动生成测试用例、脚本、回归检查和缺陷归类；质量门禁设计与复杂问题定位仍需人。",us:[{n:"Software developers, QA analysts & testers",s:9}]},
+  {name:"研发",count:1149,avg:9.0,ai_impact:"高暴露。AI已显著改变编码、调试、文档和代码审查；架构取舍、复杂系统设计和工程治理仍由人主导。",us:[{n:"Software developers, QA analysts & testers",s:9},{n:"Computer programmers",s:9},{n:"Computer and information research scientists",s:9}]},
+  {name:"硬件",count:5,avg:8.0,ai_impact:"中等暴露。AI可做诊断建议、配置文档和巡检辅助；设备安装、排障和现场处理仍依赖人。",us:[{n:"Computer hardware engineers",s:8}]},
+  {name:"综合管理",count:133,avg:6.2,ai_impact:"中高暴露。AI可承接材料、跟踪、分析和例会信息同步；综合管理的统筹与判断仍是核心。",us:[{n:"Administrative services & facilities managers",s:5},{n:"Computer and information systems managers",s:7},{n:"Property, real estate & community assoc. managers",s:6},{n:"Financial managers",s:7}]},
+  {name:"行政",count:108,avg:7.3,ai_impact:"中高暴露。AI可用于排会、流程问答、台账和文书；对人服务、现场协调和细节兜底仍靠人。",us:[{n:"Secretaries and administrative assistants",s:8},{n:"General office clerks",s:9},{n:"Administrative services & facilities managers",s:5}]},
+  {name:"设计",count:60,avg:8.0,ai_impact:"高暴露。AI可快速产出视觉草稿、版式和探索方向；品牌气质、体验质量和最终创意把关仍靠设计师。",us:[{n:"Graphic designers",s:9},{n:"Interior designers",s:7},{n:"Industrial designers",s:8},{n:"Art directors",s:8}]},
+  {name:"财务",count:726,avg:8.2,ai_impact:"高暴露。AI可加速对账、报表、凭证检查和异常识别；政策判断、审计口径与关键复核仍需人。",us:[{n:"Accountants and auditors",s:8},{n:"Financial managers",s:7},{n:"Financial analysts",s:9},{n:"Loan officers",s:8},{n:"Bookkeeping, accounting & auditing clerks",s:9}]},
+  {name:"运营管理",count:281,avg:5.8,ai_impact:"中高暴露。AI可做日报、台账、异常监控和流程优化建议；经营节奏和跨团队推进仍需人。",us:[{n:"Project management specialists",s:7},{n:"Administrative services & facilities managers",s:5},{n:"Property, real estate & community assoc. managers",s:6},{n:"Construction managers",s:5}]},
+  {name:"采购",count:63,avg:7.0,ai_impact:"中高暴露。AI可做比价、需求汇总、合同草稿和供应商资料整理；供应商管理和关键谈判仍在人。",us:[{n:"Purchasing managers, buyers & agents",s:7}]},
+  {name:"风控合规",count:96,avg:8.0,ai_impact:"高暴露。AI适合规则识别、案例归类、审查初筛和监控预警；高风险判断和责任界定仍需专家。",us:[{n:"Compliance officers",s:8},{n:"Financial examiners",s:8},{n:"Insurance underwriters",s:9},{n:"Claims adjusters, appraisers, examiners & investigators",s:7}]},
+  {name:"高管",count:16,avg:6.0,ai_impact:"中等暴露。AI可增强信息摄取、材料阅读和决策准备；最终拍板、取舍和组织牵引仍是人的角色。",us:[{n:"Top executives",s:6}]}
+];
+
+
+// ═══════════════════════════════════
+// TREEMAP  (D3)
+// ═══════════════════════════════════
+function renderTreemap(){
+  const cont = document.getElementById('sec-treemap').querySelector('.panel');
+  const W = cont.clientWidth - 2;
+  const H = Math.max(480, Math.round(W * 0.55));
+  const svg = d3.select('#treemap-svg').attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+  svg.selectAll('*').remove();
+
+  const hier = d3.hierarchy({name:'root', children: DATA.map(d=>({...d, value: Math.pow(d.count, 0.62)}))})
+    .sum(d => d.value || 0).sort((a,b) => b.value - a.value);
+  d3.treemap().size([W, H]).paddingOuter(3).paddingInner(2).round(true)(hier);
+
+  const g = svg.selectAll('g.node').data(hier.leaves()).enter().append('g')
+    .attr('class','node').attr('transform', d => `translate(${d.x0},${d.y0})`);
+  g.append('rect')
+    .attr('width',  d => Math.max(0, d.x1 - d.x0))
+    .attr('height', d => Math.max(0, d.y1 - d.y0))
+    .attr('fill', d => clr(d.data.avg))
+    .attr('rx', 5).attr('ry', 5);
+  g.append('clipPath').attr('id', (d,i) => `tcp${i}`).append('rect')
+    .attr('width',  d => Math.max(0, d.x1 - d.x0 - 8))
+    .attr('height', d => Math.max(0, d.y1 - d.y0 - 8))
+    .attr('x', 4).attr('y', 4).attr('rx', 3);
+  g.each(function(d, i){
+    const w = d.x1-d.x0, h = d.y1-d.y0;
+    if(w < 30 || h < 20) return;
+    const nd = d3.select(this), p = 7;
+    const c = clr(d.data.avg), tx = ctext(c);
+    const a = b => tx==='#000' ? `rgba(0,0,0,${b})` : `rgba(255,255,255,${b})`;
+    const gl = nd.append('g').attr('clip-path', `url(#tcp${i})`);
+    if(h >= 30 && w >= 38){
+      const fs = w>100 ? 13 : (w>66 ? 11 : 9.5);
+      const mc = Math.floor((w - p*2) / (fs * 0.72));
+      let txt = d.data.name;
+      if(txt.length > mc && mc > 2) txt = txt.slice(0, mc-1) + '…';
+      gl.append('text').attr('x', p).attr('y', p+fs)
+        .attr('font-size', fs).attr('fill', a(0.95)).attr('font-weight', 600).text(txt);
+    }
+    if(h >= 52 && w >= 48){
+      gl.append('text').attr('x', p).attr('y', h-p-14)
+        .attr('font-size', 9.5).attr('fill', a(0.6))
+        .text(d.data.count.toLocaleString('zh-CN') + ' 人');
+    }
+    if(h >= 38 && w >= 35){
+      gl.append('text').attr('x', w-p).attr('y', h-p).attr('text-anchor','end')
+        .attr('font-size', w>80 ? 13 : 11).attr('fill', a(0.9)).attr('font-weight', 700)
+        .text(d.data.avg.toFixed(1));
+    }
+  });
+  g.on('mouseenter', function(){ d3.select(this).select('rect').attr('opacity', .8); })
+   .on('mouseleave', function(){ d3.select(this).select('rect').attr('opacity', 1); hideTT(); })
+   .on('mousemove',  (ev, d) => showTT(ev, d.data));
+}
+
+// Sort by avg desc initially
+const DATA = RAW.sort((a,b)=>b.avg-a.avg||b.count-a.count);
+
+// ═══════════════════════════════════
+// COLOR
+// ═══════════════════════════════════
+const _colorFn = (function(){
+  const stops = [
+    [1,"#1a6b3c"],[3,"#2da44e"],[5,"#3fb950"],
+    [6,"#bfb800"],[7,"#d29922"],[8,"#f0883e"],
+    [9,"#da3633"],[10,"#8b0000"]
+  ];
+  return function(score){
+    score = Math.max(1, Math.min(10, score));
+    for(let i=1;i<stops.length;i++){
+      if(score<=stops[i][0]){
+        const [s0,c0]=stops[i-1], [s1,c1]=stops[i];
+        const t=(score-s0)/(s1-s0);
+        return lerpHex(c0,c1,t);
+      }
+    }
+    return stops[stops.length-1][1];
+  };
+})();
+
+function hexToRgb(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+function lerpHex(c0,c1,t){
+  const [r0,g0,b0]=hexToRgb(c0),[r1,g1,b1]=hexToRgb(c1);
+  const r=Math.round(r0+(r1-r0)*t),g=Math.round(g0+(g1-g0)*t),b=Math.round(b0+(b1-b0)*t);
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+function clr(s){ return _colorFn(s); }
+function ctext(hex){ const [r,g,b]=hexToRgb(hex); return (0.299*r+0.587*g+0.114*b)>135?'#000':'#fff'; }
+
+// ═══════════════════════════════════
+// STATS
+// ═══════════════════════════════════
+const total = DATA.reduce((s,d)=>s+d.count,0);
+const wAvg  = DATA.reduce((s,d)=>s+d.count*d.avg,0)/total;
+const nHigh = DATA.filter(d=>d.avg>=8).length;
+const nLow  = DATA.filter(d=>d.avg<=5).length;
+const nMid  = DATA.length-nHigh-nLow;
+
+document.getElementById('stat-grid').innerHTML = [
+  {v:total.toLocaleString('zh-CN'), l:'总员工人数', s:'含流通106,800人', c:'var(--blue)'},
+  {v:DATA.length, l:'岗位族数量', s:'已分析', c:'var(--t1)'},
+  {v:wAvg.toFixed(2), l:'加权平均 AI 评分', s:'员工人数加权', c:'var(--orange)'},
+  {v:nHigh, l:'高暴露岗位（≥8）', s:`占比 ${(nHigh/DATA.length*100).toFixed(0)}%`, c:'var(--red)'},
+  {v:nLow,  l:'低暴露岗位（≤5）', s:`占比 ${(nLow/DATA.length*100).toFixed(0)}%`, c:'var(--green)'},
+  {v:nMid,  l:'中度暴露（6–7）', s:`占比 ${(nMid/DATA.length*100).toFixed(0)}%`, c:'var(--purple)'},
+  {v:'9.0', l:'最高 AI 评分', s:'商业智能 / 研发 / 测试', c:'#da3633'},
+  {v:'4.3', l:'最低 AI 评分', s:'城市综合支持', c:'#2da44e'},
+].map(s=>`<div class="stat-card"><div class="sc-val" style="color:${s.c}">${s.v}</div><div class="sc-label">${s.l}</div><div class="sc-sub">${s.s}</div></div>`).join('');
+
+// ═══════════════════════════════════
+// TIERS
+// ═══════════════════════════════════
+const TIERS = [
+  {l:'极低暴露',r:[1,3.9], c:'#1a6b3c',bg:'rgba(26,107,60,.15)'},
+  {l:'低暴露',  r:[4,5.9], c:'#2da44e',bg:'rgba(45,164,78,.12)'},
+  {l:'中度暴露',r:[6,7.9], c:'#d29922',bg:'rgba(210,153,34,.12)'},
+  {l:'高暴露',  r:[8,8.9], c:'#f0883e',bg:'rgba(240,136,62,.12)'},
+  {l:'极高暴露',r:[9,10],  c:'#da3633',bg:'rgba(218,54,51,.12)'},
+];
+const pieL=[],pieD=[],pieC=[];
+TIERS.forEach(t=>{
+  const items=DATA.filter(d=>d.avg>=t.r[0]&&d.avg<=t.r[1]);
+  const ppl=items.reduce((s,d)=>s+d.count,0);
+  document.getElementById('tier-grid').innerHTML += `
+    <div class="tier-card" style="border-left-color:${t.c};background:${t.bg}">
+      <div class="tier-score" style="color:${t.c}">${t.r[0]}–${t.r[1]}</div>
+      <div class="tier-label">${t.l}</div>
+      <div class="tier-count">${items.length} 个岗位族</div>
+      <div class="tier-pct">${ppl.toLocaleString('zh-CN')} 人 · ${(ppl/total*100).toFixed(1)}%</div>
+      <div class="tier-jobs" title="${items.map(d=>d.name).join('、')}">${items.map(d=>d.name).join('、')||'—'}</div>
+    </div>`;
+  pieL.push(t.l); pieD.push(ppl); pieC.push(t.c);
+});
+new Chart(document.getElementById('pie-chart'),{
+  type:'doughnut',
+  data:{labels:pieL, datasets:[{data:pieD,backgroundColor:pieC,borderColor:'#0d1117',borderWidth:3}]},
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{position:'right',labels:{color:'#c9d1d9',font:{size:11},padding:10}},
+      tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw.toLocaleString('zh-CN')} 人 (${(ctx.raw/total*100).toFixed(1)}%)`}}
+    }
+  }
+});
+
+// ═══════════════════════════════════
+// TABLE
+// ═══════════════════════════════════
+let tableData=[...DATA], sortCol='avg', sortDir=-1;
+
+function renderTable(){
+  document.getElementById('tbl-count').textContent=`显示 ${tableData.length} / ${DATA.length} 条`;
+  const tbody=document.getElementById('tbl-body');
+  tbody.innerHTML=tableData.map(d=>{
+    const c=clr(d.avg), ct=ctext(c);
+    // US jobs: show all, max 3 then expand
+    const usLines=d.us.map(j=>{
+      const jc=clr(j.s),jt=ctext(jc);
+      return `<div class="us-job-line"><span class="us-job-name">${j.n}</span><span class="us-job-score" style="background:${jc};color:${jt}">${j.s}/10</span></div>`;
+    });
+    let usHtml;
+    if(usLines.length<=3){
+      usHtml=usLines.join('');
+    } else {
+      const visible=usLines.slice(0,3).join('');
+      const extraJson=JSON.stringify(d.us.slice(3)).replace(/"/g,'&quot;');
+      usHtml=visible+`<button class="expand-btn" onclick="expandRow(this,'${extraJson}')">+ ${d.us.length-3} 更多…</button>`;
+    }
+    // AI impact
+    const aiHtml=d.ai_impact
+      ? `<span class="ai-impact-text">${d.ai_impact}</span>`
+      : `<span class="ai-impact-empty">—</span>`;
+
+    return `<tr>
+      <td class="name-cell" style="cursor:pointer" onmouseenter="showTT(event,${JSON.stringify(d).replace(/"/g,'&quot;')})" onmouseleave="hideTT()">${d.name}</td>
+      <td class="num-cell">${d.count.toLocaleString('zh-CN')}</td>
+      <td class="num-cell"><span class="score-pill" style="background:${c};color:${ct}">${d.avg}</span></td>
+      <td>${usHtml}</td>
+      <td>${aiHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function expandRow(btn, extraJson){
+  const extra=JSON.parse(extraJson.replace(/&quot;/g,'"'));
+  let html=extra.map(j=>{
+    const jc=clr(j.s),jt=ctext(jc);
+    return `<div class="us-job-line"><span class="us-job-name">${j.n}</span><span class="us-job-score" style="background:${jc};color:${jt}">${j.s}/10</span></div>`;
+  }).join('');
+  btn.insertAdjacentHTML('beforebegin',html);
+  btn.remove();
+}
+
+function filterTable(){
+  const q=document.getElementById('tbl-search').value.trim().toLowerCase();
+  tableData=q?DATA.filter(d=>d.name.includes(q)||d.us.some(j=>j.n.toLowerCase().includes(q))||d.ai_impact.includes(q)):[...DATA];
+  applySort(); renderTable();
+}
+
+function sortTable(col){
+  if(sortCol===col) sortDir*=-1; else{sortCol=col;sortDir=-1;}
+  document.querySelectorAll('th[data-col]').forEach(th=>{
+    th.classList.toggle('sorted',th.dataset.col===col);
+    const si=th.querySelector('.si');
+    if(th.dataset.col===col) si.textContent=sortDir>0?'↑':'↓'; else si.textContent='↕';
+  });
+  applySort(); renderTable();
+}
+function applySort(){
+  tableData.sort((a,b)=>{
+    if(sortCol==='name') return sortDir*a.name.localeCompare(b.name,'zh');
+    return sortDir*(b[sortCol]-a[sortCol]);
+  });
+}
+
+// init: avg already sorted desc
+document.querySelector('th[data-col="avg"]').classList.add('sorted');
+renderTable();
+window.addEventListener('load', function(){ setTimeout(renderTreemap, 80); });
+
+// ═══════════════════════════════════
+// INSIGHTS
+// ═══════════════════════════════════
+
+// ══════════════════════════
+// INSIGHTS  (分类版)
+// ══════════════════════════
+(function(){
+  const groups = [
+    {
+      cat: '🔍 整体概况',
+      color: '#58a6ff',
+      items: [
+        {
+          icon: '📊',
+          t: '加权均分 6.35：整体中等偏上',
+          b: `受流通岗位大权重影响，加权均分约 <strong>6.35/10</strong>。若排除流通，其余岗位加权均分超 <strong>7.2</strong>，显示非流通岗位 AI 影响已相当显著。`
+        },
+        {
+          icon: '🏠',
+          t: '"流通"是最大的人数方阵',
+          b: `<strong>流通岗位</strong>拥有 <strong>106,800 人</strong>，占全公司约 <strong>81.7%</strong>，AI Exposure 评分 <strong>6.3/10</strong>（中等）。主要对应房产经纪人、资产评估师，AI 能辅助但难以完全取代人际信任与本地化判断。`
+        },
+        {
+          icon: '🔗',
+          t: '岗位映射覆盖 50+ 个 BLS 职业',
+          b: `34 个岗位族共对应约 <strong>50+ 个</strong>美国 BLS 标准职业，从实体建筑工人（AI 1/10）到数据科学家（AI 9/10），跨度达 <strong>9 个分段</strong>，充分体现房地产科技公司的多元人才结构。`
+        },
+        {
+          icon: '🎯',
+          t: '15 个岗位族 AI Exposure ≥ 8',
+          b: `共 <strong>15 个</strong>岗位族评分 ≥ 8，占岗位族总数 <strong>44%</strong>，但这些岗位合计人数仅约 <strong>16,028 人（12.3%）</strong>，高暴露岗位集中在相对小型的专业技术序列。`
+        },
+      ]
+    },
+    {
+      cat: '⚡ 高暴露重点岗位',
+      color: '#f85149',
+      items: [
+        {
+          icon: '🔴',
+          t: '三大"极高暴露"岗位族',
+          b: `<strong>商业智能、研发、测试</strong>均获得 <strong>9.0/10</strong> 的最高评分，全面对应数据科学家、软件开发工程师等职业。这些岗位受 AI 重塑程度最深，也是 AI 辅助后生产力提升最显著的岗位。合计 <strong>1,385 人</strong>。`
+        },
+        {
+          icon: '🚀',
+          t: '"业务策略"高暴露中的人数大户',
+          b: `<strong>业务策略</strong>有 <strong>1,087 人</strong>，AI Exposure <strong>8.5/10</strong>，在高暴露岗位中人数前列，对应经济学家、运营研究分析师等。面临 AI 辅助决策的深度渗透。`
+        },
+        {
+          icon: '💼',
+          t: '"共享服务"高暴露风险值关注',
+          b: `共享服务 <strong>1,425 人</strong>，评分 <strong>8.3/10</strong>，对应客服、财务文员、HR 等重复性事务岗位。受生成式 AI（客服机器人、自动化流程）影响最为直接，需重点关注转型路径。`
+        },
+      ]
+    },
+    {
+      cat: '📍 低暴露与风险边界',
+      color: '#3fb950',
+      items: [
+        {
+          icon: '📉',
+          t: '低暴露岗位集中于线下服务',
+          b: `<strong>城市综合支持（4.3）、履约服务（4.5）、品质管理（5.0）</strong>评分最低，合计约 <strong>7,669 人</strong>。以现场操作、实体工程、人工巡检为主，短期内 AI 难以深度渗透。`
+        },
+        {
+          icon: '🛡️',
+          t: '高分不等于岗位消失',
+          b: `AI 高暴露意味着岗位<strong>工作内容被重塑</strong>，而非岗位消亡。研发、法务、财务等评分 ≥ 8 的岗位，AI 将承担重复性执行，人将聚焦判断、创意与责任承担。转型准备比担忧更有价值。`
+        },
+      ]
+    },
+  ];
+
+  const grid = document.getElementById('insights-grid');
+  grid.innerHTML = '';
+  groups.forEach(g => {
+    // 分组标题行
+    const header = document.createElement('div');
+    header.className = 'insight-group-header';
+    header.style.cssText = `grid-column:1/-1; display:flex; align-items:center; gap:10px; padding:4px 0 2px;`;
+    header.innerHTML = `
+      <span style="font-size:13px;font-weight:700;color:${g.color}">${g.cat}</span>
+      <div style="flex:1;height:1px;background:#21262d"></div>`;
+    grid.appendChild(header);
+
+    // 卡片
+    g.items.forEach(i => {
+      const card = document.createElement('div');
+      card.className = 'insight-card';
+      card.style.cssText = `border-left:3px solid ${g.color};`;
+      card.innerHTML = `<div class="insight-icon">${i.icon}</div><div class="insight-title">${i.t}</div><div class="insight-body">${i.b}</div>`;
+      grid.appendChild(card);
+    });
+  });
+})();
+
+
+// ═══════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════
+const tt=document.getElementById('tooltip');
+function showTT(ev,d){
+  if(typeof d==='string') d=JSON.parse(d);
+  const c=clr(d.avg),ct=ctext(c);
+  document.getElementById('tt-name').textContent=d.name;
+  const b=document.getElementById('tt-badge');
+  b.textContent=`AI ${d.avg}/10`; b.style.background=c; b.style.color=ct;
+  document.getElementById('tt-cnt').textContent=`${d.count.toLocaleString('zh-CN')} 人`;
+  const ul=document.getElementById('tt-ul'); ul.innerHTML='';
+  (d.us||[]).forEach(j=>{
+    const jc=clr(j.s),jt=ctext(jc);
+    const li=document.createElement('li'); li.className='tt-li';
+    li.innerHTML=`<span class="tt-jn">${j.n}</span><span class="tt-js" style="background:${jc};color:${jt}">${j.s}/10</span>`;
+    ul.appendChild(li);
+  });
+  const tw=360, th_=tt.offsetHeight||210;
+  let left=ev.clientX+16, top=ev.clientY-14;
+  if(left+tw>window.innerWidth-8) left=ev.clientX-tw-16;
+  if(top+th_>window.innerHeight-8) top=window.innerHeight-th_-8;
+  if(top<8) top=8;
+  tt.style.left=left+'px'; tt.style.top=top+'px'; tt.classList.add('on');
+}
+function hideTT(){ tt.classList.remove('on'); }
+
+// ═══════════════════════════════════
+// NAV SCROLL HIGHLIGHT
+// ═══════════════════════════════════
+function goto(id){ document.getElementById(id).scrollIntoView({behavior:'smooth'}); }
+const _secs=['sec-overview','sec-treemap','sec-bu','sec-tiers','sec-table','sec-insights'];
+const _links=document.querySelectorAll('.nav-link');
+window.addEventListener('scroll',()=>{
+  let cur=_secs[0];
+  _secs.forEach(id=>{const el=document.getElementById(id);if(el&&el.getBoundingClientRect().top<=70) cur=id;});
+  _links.forEach((l,i)=>l.classList.toggle('active',_secs[i]===cur));
+},{passive:true});
+let _rt2; window.addEventListener('resize',()=>{ clearTimeout(_rt2); _rt2=setTimeout(renderTreemap,140); });
+</script>
+</body>
+</html>

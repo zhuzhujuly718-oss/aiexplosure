@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>经纪事业线 · AI Exposure 分析</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #21262d;
+    --text1: #f0f6fc; --text2: #c9d1d9; --muted: #8b949e; --dim: #6e7681;
+    --accent: #d2a8ff;
+  }
+  body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text1); min-height:100vh; }
+
+  .header { padding:20px 28px 16px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:14px; }
+  .hicon { font-size:30px; line-height:1; margin-top:3px; }
+  .htitle { font-size:21px; font-weight:700; color:var(--text1); letter-spacing:-0.3px; }
+  .hsub { font-size:12px; color:var(--muted); margin-top:4px; line-height:1.6; max-width:720px; }
+
+  .stats { display:flex; border-bottom:1px solid var(--border); background:var(--surface); overflow-x:auto; }
+  .stat { flex:1; min-width:110px; padding:12px 16px; border-right:1px solid var(--border); text-align:center; }
+  .stat:last-child { border-right:none; }
+  .sv { font-size:24px; font-weight:700; color:var(--accent); line-height:1.1; }
+  .sv.red { color:#f85149; } .sv.grn { color:#3fb950; } .sv.org { color:#e3b341; }
+  .sl { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-top:3px; }
+
+  .lgrow { display:flex; align-items:center; gap:14px; padding:10px 28px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+  .lgtitle { font-size:11px; font-weight:600; color:var(--dim); text-transform:uppercase; letter-spacing:.08em; flex-shrink:0; }
+  .gbar { width:170px; height:12px; border-radius:6px; background:linear-gradient(to right,#1a6b3c,#2da44e,#3fb950,#bfb800,#d29922,#f0883e,#da3633,#8b0000); }
+  .glbl { font-size:11px; color:var(--muted); }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-left:4px; }
+  .chip { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--muted); }
+  .cdot { width:10px; height:10px; border-radius:3px; flex-shrink:0; }
+  .lgright { margin-left:auto; font-size:11px; color:var(--dim); font-style:italic; }
+
+  .cwrap { padding:16px 24px 8px; }
+  #svg { display:block; width:100%; cursor:default; }
+  .node { cursor:pointer; }
+  .node rect { stroke:var(--bg); stroke-width:2; }
+  .node text { pointer-events:none; user-select:none; }
+  .lname { font-weight:600; }
+  .fnote { font-size:11px; color:var(--dim); padding:3px 24px 14px; font-style:italic; }
+
+  /* Tooltip */
+  #tt { position:fixed; background:#1c2128; border:1px solid #30363d; border-radius:12px;
+         pointer-events:none; opacity:0; transition:opacity .18s; z-index:9999;
+         max-width:400px; min-width:280px; box-shadow:0 20px 40px rgba(0,0,0,.7); overflow:hidden; }
+  #tt.on { opacity:1; }
+  .tth { padding:13px 15px 11px; border-bottom:1px solid #30363d; }
+  .ttname { font-size:15px; font-weight:700; color:var(--text1); margin-bottom:6px; line-height:1.3; }
+  .ttmeta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .ttbadge { padding:2px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+  .ttcnt { font-size:12px; color:var(--muted); padding:2px 8px; border:1px solid #30363d; border-radius:20px; }
+  .ttbar { display:flex; align-items:center; gap:7px; margin-top:8px; }
+  .tblbl { font-size:11px; color:var(--dim); flex-shrink:0; width:34px; }
+  .tbtrack { flex:1; height:5px; background:#30363d; border-radius:3px; overflow:hidden; }
+  .tbfill { height:100%; border-radius:3px; }
+  .tbval { font-size:11px; font-weight:600; color:var(--text2); flex-shrink:0; width:28px; text-align:right; }
+  .ttb { padding:11px 15px 13px; }
+  .ttsec { font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--dim); font-weight:600; margin-bottom:7px; }
+  .ttul { list-style:none; }
+  .ttli { display:flex; align-items:flex-start; justify-content:space-between; padding:5px 0; border-bottom:1px solid #21262d; gap:9px; }
+  .ttli:last-child { border-bottom:none; padding-bottom:0; }
+  .ttjn { font-size:11.5px; color:var(--text2); flex:1; line-height:1.55; }
+  .ttjs { font-size:11px; font-weight:700; padding:2px 7px; border-radius:10px; flex-shrink:0; margin-top:2px; white-space:nowrap; }
+
+/* ─── BACK BUTTON ─── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(88,166,255,.12);
+  border: 1px solid rgba(88,166,255,.3);
+  border-radius: 20px;
+  color: #58a6ff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, border-color .15s;
+  margin-bottom: 2px;
+}
+.back-btn:hover { background: rgba(88,166,255,.22); border-color: rgba(88,166,255,.6); }
+.back-bar {
+  padding: 10px 28px 0;
+  display: flex;
+  align-items: center;
+}
+</style>
+</head>
+<body>
+<div class="back-bar">
+  <a class="back-btn" href="beike_analysis_v2.html#sec-bu">← 返回总览</a>
+</div>
+<div class="header">
+  <div class="hicon">🤝</div>
+  <div>
+    <div class="htitle">经纪事业线 · AI Exposure 岗位分析</div>
+    <p class="hsub">方块<strong>面积</strong>代表该岗位族人数（对数缩放），<strong>颜色</strong>代表 AI Exposure 评分（绿=低 → 红=高）。鼠标悬停查看岗位详情及对应美国岗位评分。</p>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="sv">104,516</div><div class="sl">总员工人数</div></div>
+  <div class="stat"><div class="sv">26</div><div class="sl">岗位族数量</div></div>
+  <div class="stat"><div class="sv org">6.27</div><div class="sl">加权平均 AI Exposure</div></div>
+  <div class="stat"><div class="sv red">12</div><div class="sl">高暴露岗位（≥8分）</div></div>
+  <div class="stat"><div class="sv grn">3</div><div class="sl">低暴露岗位（≤5分）</div></div>
+</div>
+
+<div class="lgrow">
+  <span class="lgtitle">AI Exposure</span>
+  <span class="glbl">1</span><div class="gbar"></div><span class="glbl">10</span>
+  <div class="chips">
+    <div class="chip"><div class="cdot" style="background:#1a6b3c"></div>极低 1–3</div>
+    <div class="chip"><div class="cdot" style="background:#2da44e"></div>低 4–5</div>
+    <div class="chip"><div class="cdot" style="background:#d29922"></div>中 6–7</div>
+    <div class="chip"><div class="cdot" style="background:#f0883e"></div>高 8</div>
+    <div class="chip"><div class="cdot" style="background:#da3633"></div>极高 9–10</div>
+  </div>
+  <span class="lgright">面积 ∝ 岗位人数（0.62次幂缩放）</span>
+</div>
+
+<div class="cwrap"><svg id="svg"></svg></div>
+<p class="fnote">※ 人数为 0 或空白的岗位族已被过滤；人数采用幂次（0.62）缩放以保留各岗位的可读性。</p>
+
+<div id="tt">
+  <div class="tth">
+    <div class="ttname" id="ttn">—</div>
+    <div class="ttmeta">
+      <span class="ttbadge" id="ttb">—</span>
+      <span class="ttcnt" id="ttc">—</span>
+    </div>
+    <div class="ttbar">
+      <span class="tblbl">AI分</span>
+      <div class="tbtrack"><div class="tbfill" id="tbf" style="width:0%"></div></div>
+      <span class="tbval" id="tbv">—</span>
+    </div>
+  </div>
+  <div class="ttb">
+    <div class="ttsec">↳ 对应 US 岗位 · AI Exposure</div>
+    <ul class="ttul" id="ttul"></ul>
+  </div>
+</div>
+
+<script>
+const DATA = [{"name": "业务产品研发", "count": 14, "avg": 7.5, "us": [{"n": "Industrial designers", "score": 7}, {"n": "Interior designers", "score": 7}, {"n": "Market research analysts", "score": 9}, {"n": "Survey researchers", "score": 7}]}, {"name": "业务策略", "count": 744, "avg": 8.5, "us": [{"n": "Management analysts", "score": 7}, {"n": "Economists", "score": 9}, {"n": "Operations research analysts", "score": 9}, {"n": "Market research analysts", "score": 9}]}, {"name": "产品运营", "count": 377, "avg": 7.3, "us": [{"n": "Project management specialists", "score": 7}, {"n": "Management analysts", "score": 7}, {"n": "Computer systems analysts", "score": 8}]}, {"name": "产品运营策略", "count": 2, "avg": 8.3, "us": [{"n": "Market research analysts", "score": 9}, {"n": "Operations research analysts", "score": 9}, {"n": "Management analysts", "score": 7}]}, {"name": "人力资源", "count": 561, "avg": 7.3, "us": [{"n": "Human resources specialists", "score": 7}, {"n": "Human resources managers", "score": 7}, {"n": "Compensation, benefits, and job analysis specialists", "score": 8}]}, {"name": "公司事务", "count": 64, "avg": 7.0, "us": [{"n": "Administrative services and facilities managers", "score": 5}, {"n": "Public relations specialists", "score": 8}, {"n": "Secretaries and administrative assistants", "score": 8}]}, {"name": "共享服务", "count": 25, "avg": 8.3, "us": [{"n": "General office clerks", "score": 9}, {"n": "Information clerks", "score": 7}, {"n": "Financial clerks", "score": 9}, {"n": "Bookkeeping, accounting, and auditing clerks", "score": 9}, {"n": "Human resources specialists", "score": 7}, {"n": "Customer service representatives", "score": 9}]}, {"name": "品质管理", "count": 445, "avg": 5.0, "us": [{"n": "Quality control inspectors", "score": 5}, {"n": "Construction and building inspectors", "score": 5}]}, {"name": "商业智能", "count": 18, "avg": 9.0, "us": [{"n": "Data scientists", "score": 9}, {"n": "Operations research analysts", "score": 9}, {"n": "Database administrators and architects", "score": 9}]}, {"name": "城市综合支持", "count": 829, "avg": 4.3, "us": [{"n": "Administrative services and facilities managers", "score": 5}, {"n": "General maintenance and repair workers", "score": 2}, {"n": "Property, real estate, and community association managers", "score": 6}]}, {"name": "客户赋能", "count": 361, "avg": 7.0, "us": [{"n": "Training and development specialists", "score": 7}, {"n": "Training and development managers", "score": 7}, {"n": "Instructional coordinators", "score": 7}]}, {"name": "履约服务", "count": 4887, "avg": 4.5, "us": [{"n": "General maintenance and repair workers", "score": 2}, {"n": "Construction and building inspectors", "score": 5}, {"n": "Construction managers", "score": 5}, {"n": "Property, real estate, and community association managers", "score": 6}]}, {"name": "市场", "count": 131, "avg": 8.0, "us": [{"n": "Advertising, promotions, and marketing managers", "score": 8}, {"n": "Public relations specialists", "score": 8}, {"n": "Editors", "score": 9}, {"n": "Technical writers", "score": 9}, {"n": "Meeting, convention, and event planners", "score": 6}]}, {"name": "店面工程", "count": 130, "avg": 5.4, "us": [{"n": "Architects", "score": 7}, {"n": "Civil engineers", "score": 6}, {"n": "Construction managers", "score": 5}, {"n": "Construction laborers and helpers", "score": 1}, {"n": "Cost estimators", "score": 8}]}, {"name": "技术运维", "count": 2, "avg": 8.0, "us": [{"n": "Computer support specialists", "score": 8}, {"n": "Network and computer systems administrators", "score": 8}, {"n": "Information security analysts", "score": 8}, {"n": "Computer network architects", "score": 8}]}, {"name": "拓展联动", "count": 5929, "avg": 7.0, "us": [{"n": "Sales managers", "score": 7}, {"n": "Wholesale and manufacturing sales representatives", "score": 7}, {"n": "Sales engineers", "score": 7}]}, {"name": "法务", "count": 217, "avg": 8.0, "us": [{"n": "Lawyers", "score": 8}, {"n": "Paralegals and legal assistants", "score": 9}, {"n": "Arbitrators, mediators, and conciliators", "score": 7}]}, {"name": "流通", "count": 89048, "avg": 6.3, "us": [{"n": "Real estate brokers and sales agents", "score": 6}, {"n": "Property, real estate, and community association managers", "score": 6}, {"n": "Property appraisers and assessors", "score": 7}]}, {"name": "研发", "count": 6, "avg": 9.0, "us": [{"n": "Software developers, quality assurance analysts, and testers", "score": 9}, {"n": "Computer programmers", "score": 9}, {"n": "Computer and information research scientists", "score": 9}]}, {"name": "综合管理", "count": 39, "avg": 6.2, "us": [{"n": "Administrative services and facilities managers", "score": 5}, {"n": "Computer and information systems managers", "score": 7}, {"n": "Property, real estate, and community association managers", "score": 6}, {"n": "Financial managers", "score": 7}]}, {"name": "行政", "count": 52, "avg": 7.3, "us": [{"n": "Secretaries and administrative assistants", "score": 8}, {"n": "General office clerks", "score": 9}, {"n": "Administrative services and facilities managers", "score": 5}]}, {"name": "设计", "count": 11, "avg": 8.0, "us": [{"n": "Graphic designers", "score": 9}, {"n": "Interior designers", "score": 7}, {"n": "Industrial designers", "score": 8}, {"n": "Art directors", "score": 8}]}, {"name": "财务", "count": 344, "avg": 8.2, "us": [{"n": "Accountants and auditors", "score": 8}, {"n": "Financial managers", "score": 7}, {"n": "Financial analysts", "score": 9}, {"n": "Loan officers", "score": 8}, {"n": "Bookkeeping, accounting, and auditing clerks", "score": 9}]}, {"name": "运营管理", "count": 252, "avg": 5.8, "us": [{"n": "Project management specialists", "score": 7}, {"n": "Administrative services and facilities managers", "score": 5}, {"n": "Property, real estate, and community association managers", "score": 6}, {"n": "Construction managers", "score": 5}]}, {"name": "风控合规", "count": 24, "avg": 8.0, "us": [{"n": "Compliance officers", "score": 8}, {"n": "Financial examiners", "score": 8}, {"n": "Insurance underwriters", "score": 9}, {"n": "Claims adjusters, appraisers, examiners, and investigators", "score": 7}]}, {"name": "高管", "count": 4, "avg": 6.0, "us": [{"n": "Top executives", "score": 6}]}];
+
+const colorFn = d3.scaleSequential()
+  .domain([1,10])
+  .interpolator(d3.interpolateRgbBasis([
+    "#1a6b3c","#2da44e","#3fb950","#bfb800","#d29922","#f0883e","#da3633","#8b0000"
+  ]));
+
+function clr(s) { return colorFn(s); }
+function ctext(c) {
+  const m = c.match(/\d+/g); if(!m) return '#fff';
+  const [r,g,b]=m.map(Number); return (0.299*r+0.587*g+0.114*b)>135?'#000':'#fff';
+}
+
+function render() {
+  const wrap = document.querySelector('.cwrap');
+  const W = wrap.clientWidth;
+  const H = Math.max(500, Math.round(W * 0.58));
+  const svg = d3.select('#svg').attr('width',W).attr('height',H).attr('viewBox',`0 0 ${W} ${H}`);
+  svg.selectAll('*').remove();
+
+  const hier = d3.hierarchy({name:'root', children: DATA.map(d => ({...d, value: Math.pow(d.count, 0.62)})) })
+    .sum(d => d.value||0).sort((a,b)=>b.value-a.value);
+  d3.treemap().size([W,H]).paddingOuter(3).paddingInner(2).round(true)(hier);
+
+  const g = svg.selectAll('g.node').data(hier.leaves()).enter().append('g')
+    .attr('class','node').attr('transform',d=>`translate(${d.x0},${d.y0})`);
+
+  g.append('rect')
+    .attr('width',d=>Math.max(0,d.x1-d.x0)).attr('height',d=>Math.max(0,d.y1-d.y0))
+    .attr('fill',d=>clr(d.data.avg)).attr('rx',5).attr('ry',5);
+
+  g.append('clipPath').attr('id',(d,i)=>`cl${i}`).append('rect')
+    .attr('width',d=>Math.max(0,d.x1-d.x0-8)).attr('height',d=>Math.max(0,d.y1-d.y0-8))
+    .attr('x',4).attr('y',4).attr('rx',3);
+
+  g.each(function(d,i) {
+    const w=d.x1-d.x0, h=d.y1-d.y0;
+    if(w<30||h<20) return;
+    const nd=d3.select(this), p=7;
+    const c=clr(d.data.avg), tx=ctext(c);
+    const a=(b)=>tx==='#000'?`rgba(0,0,0,${b})`:`rgba(255,255,255,${b})`;
+    const gl=nd.append('g').attr('clip-path',`url(#cl${i})`);
+
+    if(h>=30&&w>=38) {
+      const fs=w>100?13:(w>66?11:9.5);
+      const mc=Math.floor((w-p*2)/(fs*0.72));
+      let txt=d.data.name; if(txt.length>mc&&mc>2) txt=txt.slice(0,mc-1)+'…';
+      gl.append('text').attr('class','lname').attr('x',p).attr('y',p+fs)
+        .attr('font-size',fs).attr('fill',a(0.95)).text(txt);
+    }
+    if(h>=52&&w>=48) {
+      const fs=w>100?11:9.5;
+      gl.append('text').attr('x',p).attr('y',h-p-14).attr('font-size',fs).attr('fill',a(0.6))
+        .text(d.data.count.toLocaleString('zh-CN')+' 人');
+    }
+    if(h>=38&&w>=35) {
+      const fs=w>80?13:11;
+      gl.append('text').attr('x',w-p).attr('y',h-p).attr('text-anchor','end')
+        .attr('font-size',fs).attr('fill',a(0.9)).attr('font-weight','700')
+        .text(d.data.avg.toFixed(1));
+    }
+  });
+
+  g.on('mouseenter',function(){ d3.select(this).select('rect').attr('opacity',.8); })
+   .on('mouseleave',function(){ d3.select(this).select('rect').attr('opacity',1); hideTT(); })
+   .on('mousemove',(ev,d)=>showTT(ev,d.data));
+}
+
+const tt=document.getElementById('tt');
+function showTT(ev,d) {
+  const c=clr(d.avg), tx=ctext(c);
+  document.getElementById('ttn').textContent=d.name;
+  const b=document.getElementById('ttb');
+  b.textContent=`AI Exposure：${d.avg.toFixed(1)} / 10`; b.style.background=c; b.style.color=tx;
+  document.getElementById('ttc').textContent=`${d.count.toLocaleString('zh-CN')} 人`;
+  document.getElementById('tbf').style.width=`${d.avg*10}%`;
+  document.getElementById('tbf').style.background=c;
+  document.getElementById('tbv').textContent=d.avg.toFixed(1);
+  const ul=document.getElementById('ttul'); ul.innerHTML='';
+  if(!d.us||!d.us.length) {
+    ul.innerHTML='<li style="font-size:12px;color:#6e7681;padding:4px 0">暂无对应美国岗位数据</li>';
+  } else {
+    d.us.forEach(j=>{
+      const jc=clr(j.score), jt=ctext(jc);
+      const li=document.createElement('li'); li.className='ttli';
+      li.innerHTML=`<span class="ttjn">${j.n}</span><span class="ttjs" style="background:${jc};color:${jt}">${j.score}/10</span>`;
+      ul.appendChild(li);
+    });
+  }
+  const tw=400,th=tt.offsetHeight||240;
+  let left=ev.clientX+18,top=ev.clientY-20;
+  if(left+tw>window.innerWidth-8) left=ev.clientX-tw-18;
+  if(top+th>window.innerHeight-8) top=window.innerHeight-th-8;
+  if(top<8) top=8;
+  tt.style.left=left+'px'; tt.style.top=top+'px'; tt.classList.add('on');
+}
+function hideTT(){ tt.classList.remove('on'); }
+
+window.addEventListener("load", function(){ setTimeout(render, 80); });
+let rt; window.addEventListener('resize',()=>{ clearTimeout(rt); rt=setTimeout(render,120); });
+</script>
+</body>
+</html>

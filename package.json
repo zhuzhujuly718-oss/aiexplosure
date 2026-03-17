@@ -1,0 +1,8 @@
+{
+  "name": "aiexplosure",
+  "private": true,
+  "scripts": {
+    "preview": "npx serve . -p 3000",
+    "start": "npx serve . -p 3000"
+  }
+}
